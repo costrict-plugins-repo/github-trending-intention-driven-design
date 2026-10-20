@@ -1,0 +1,338 @@
+{
+  "$schema": "./catalog.schema.json",
+  "schemaVersion": 1,
+  "migrations": [
+    {
+      "id": "schema-1-9-0-to-1-10-0",
+      "from": {
+        "schema": "1.9.0"
+      },
+      "to": {
+        "schema": "1.10.0"
+      },
+      "kind": "schema",
+      "summary": "Adopt digest-pinned cross-module contract schemas.",
+      "steps": [
+        {
+          "id": "review-contract-pins",
+          "mode": "review",
+          "description": "Review verification-map contract_pins and confirm each digest names the intended upstream JSON Schema bytes."
+        },
+        {
+          "id": "validate-contract-pins",
+          "mode": "validate",
+          "description": "Run the verification validator and retain its digest and reciprocal-rule results with the update review."
+        }
+      ],
+      "continuity": {
+        "identity": "preserved",
+        "intent": "preserved",
+        "semantics": "review-required",
+        "data": "unchanged",
+        "operations": "review-required"
+      }
+    },
+    {
+      "id": "schema-1-10-0-to-1-11-0",
+      "from": {
+        "schema": "1.10.0"
+      },
+      "to": {
+        "schema": "1.11.0"
+      },
+      "kind": "schema",
+      "summary": "Record the accepted IDD Toolkit release, schema digest, and distribution provenance.",
+      "steps": [
+        {
+          "id": "review-consumer-contract",
+          "mode": "review",
+          "description": "Review the accepted toolkit candidate and confirm the idd_consumer record should move to it."
+        },
+        {
+          "id": "record-consumer-contract",
+          "mode": "transform",
+          "transformation": "record-consumer-contract",
+          "description": "Record or update the idd_consumer front-matter pins in specs/skills/repo-overlay.md for the running toolkit."
+        },
+        {
+          "id": "validate-consumer-contract",
+          "mode": "validate",
+          "description": "Run idd doctor from the candidate toolkit installation and review any pin or source-provenance drift."
+        }
+      ],
+      "continuity": {
+        "identity": "preserved",
+        "intent": "preserved",
+        "semantics": "review-required",
+        "data": "unchanged",
+        "operations": "review-required"
+      }
+    },
+    {
+      "id": "schema-1-11-0-to-1-12-0",
+      "from": {
+        "schema": "1.11.0"
+      },
+      "to": {
+        "schema": "1.12.0"
+      },
+      "kind": "schema",
+      "summary": "Adopt the canonical shapes from the second identity-project contact: kind-typed fixture metadata, identity kinds, conditional required, lifecycles over value objects, and protocol-shaped journey-map vocabulary.",
+      "steps": [
+        {
+          "id": "review-canonical-shapes",
+          "mode": "review",
+          "description": "Review the 1.12.0 canonical shapes (SCHEMA.md §Second consumer contact) and confirm the repository should adopt them; transformations below rewrite spec files in place."
+        },
+        {
+          "id": "fixture-meta-kind",
+          "mode": "transform",
+          "transformation": "fixture-meta-kind",
+          "description": "Move non-constant `_meta.type` values into `_meta.kind` and restore `type: fixture` on JSON fixtures."
+        },
+        {
+          "id": "identity-kind",
+          "mode": "transform",
+          "transformation": "identity-kind",
+          "description": "Write the inferred identity.kind into model documents that omit it."
+        },
+        {
+          "id": "attribute-required-when",
+          "mode": "transform",
+          "transformation": "attribute-required-when",
+          "description": "Rewrite bare-string conditional required: values into { when: … }."
+        },
+        {
+          "id": "record-consumer-contract",
+          "mode": "transform",
+          "transformation": "record-consumer-contract",
+          "description": "Move the idd_consumer front-matter pins in specs/skills/repo-overlay.md to the running toolkit."
+        },
+        {
+          "id": "validate-canonical-shapes",
+          "mode": "validate",
+          "description": "Run the deterministic validator suite and review remaining advisories (legacy-compatible spellings, narrative rules without ids)."
+        }
+      ],
+      "continuity": {
+        "identity": "preserved",
+        "intent": "preserved",
+        "semantics": "preserved",
+        "data": "transformed",
+        "operations": "unchanged"
+      }
+    },
+    {
+      "id": "schema-1-12-0-to-1-13-0",
+      "from": {
+        "schema": "1.12.0"
+      },
+      "to": {
+        "schema": "1.13.0"
+      },
+      "kind": "schema",
+      "summary": "Promote formal evidence kinds: alloy / tla probes with pinned outcomes, vectors with reciprocity, mutation probes, and tooling locks become canonical verification-map shapes with cross-file checks.",
+      "steps": [
+        {
+          "id": "review-formal-evidence",
+          "mode": "review",
+          "description": "Review every rule alloy / tla / *_vectors block: names must resolve in the declared sources, vectors must name the rule in _meta.rules, and outcomes pinned in scripts should move into the map as expected: values."
+        },
+        {
+          "id": "record-consumer-contract",
+          "mode": "transform",
+          "transformation": "record-consumer-contract",
+          "description": "Move the idd_consumer front-matter pins in specs/skills/repo-overlay.md to the running toolkit."
+        },
+        {
+          "id": "validate-formal-evidence",
+          "mode": "validate",
+          "description": "Run the deterministic validator suite; the verification validator now resolves formal probe names and vector reciprocity."
+        }
+      ],
+      "continuity": {
+        "identity": "preserved",
+        "intent": "preserved",
+        "semantics": "preserved",
+        "data": "unchanged",
+        "operations": "review-required"
+      }
+    },
+    {
+      "id": "schema-1-13-0-to-1-14-0",
+      "from": {
+        "schema": "1.13.0"
+      },
+      "to": {
+        "schema": "1.14.0"
+      },
+      "kind": "schema",
+      "summary": "Introduce formal-result records and the evidence roll-up: checkers emit one record per probe into .idd/evidence/results/, and `idd evidence rollup` derives per-rule coverage and per-capability verification claims beside the declared ones.",
+      "steps": [
+        {
+          "id": "review-evidence-rollup",
+          "mode": "review",
+          "description": "Review how the repository gate will emit formal-result records (idd evidence record, or JSONL written by the checker scripts) and where the roll-up runs in CI."
+        },
+        {
+          "id": "record-consumer-contract",
+          "mode": "transform",
+          "transformation": "record-consumer-contract",
+          "description": "Move the idd_consumer front-matter pins in specs/skills/repo-overlay.md to the running toolkit."
+        },
+        {
+          "id": "validate-evidence-rollup",
+          "mode": "validate",
+          "description": "Run the deterministic validator suite; then run `idd evidence rollup` against a real run and review declared-above-derived findings before gating on --strict."
+        }
+      ],
+      "continuity": {
+        "identity": "preserved",
+        "intent": "preserved",
+        "semantics": "preserved",
+        "data": "unchanged",
+        "operations": "review-required"
+      }
+    },
+    {
+      "id": "schema-1-14-0-to-1-15-0",
+      "from": { "schema": "1.14.0" },
+      "to": { "schema": "1.15.0" },
+      "kind": "schema",
+      "summary": "Accept plural feature references and preserve every singular/plural metadata link through front-matter validation, traceability, and the reference graph.",
+      "steps": [
+        {
+          "id": "review-plural-references",
+          "mode": "review",
+          "description": "Review feature stories/journeys and fixture stories/scenarios. Singular primary links no longer mask additional links; review newly visible missing references and capability-closure findings."
+        },
+        {
+          "id": "record-consumer-contract",
+          "mode": "transform",
+          "transformation": "record-consumer-contract",
+          "description": "Update the accepted toolkit/schema pins in specs/skills/repo-overlay.md; no reference metadata is rewritten."
+        },
+        {
+          "id": "validate-plural-references",
+          "mode": "validate",
+          "description": "Run the deterministic validators and confirm every plural link is represented before removing any downstream singular-reference workarounds."
+        }
+      ],
+      "continuity": {
+        "identity": "preserved",
+        "intent": "preserved",
+        "semantics": "preserved",
+        "data": "unchanged",
+        "operations": "review-required"
+      }
+    },
+    {
+      "id": "schema-1-15-0-to-1-16-0",
+      "from": {
+        "schema": "1.15.0"
+      },
+      "to": {
+        "schema": "1.16.0"
+      },
+      "kind": "schema",
+      "summary": "Opt in to explicit baseline coverage for unexecuted probes; existing executed records remain valid.",
+      "steps": [
+        {
+          "id": "review-covered-evidence",
+          "mode": "review",
+          "description": "Review trusted baseline acquisition and complete tracked probe input manifests. Existing records without input manifests cannot be reused."
+        },
+        {
+          "id": "record-consumer-contract",
+          "mode": "transform",
+          "transformation": "record-consumer-contract",
+          "description": "Update accepted toolkit/schema pins; do not rewrite result records or enable skipping automatically."
+        },
+        {
+          "id": "validate-covered-evidence",
+          "mode": "validate",
+          "description": "Run validators and disposable coverage fixtures before enabling consumer-side selection. Missing baseline or unverifiable ancestry must run the probe or fail."
+        }
+      ],
+      "continuity": {
+        "identity": "preserved",
+        "intent": "preserved",
+        "semantics": "preserved",
+        "data": "unchanged",
+        "operations": "review-required"
+      }
+    },
+    {
+      "id": "schema-1-16-0-to-1-17-0",
+      "from": {
+        "schema": "1.16.0"
+      },
+      "to": {
+        "schema": "1.17.0"
+      },
+      "kind": "schema",
+      "summary": "Add the optional repository telos. Nothing references it and nothing requires it, so adoption is a choice rather than a migration.",
+      "steps": [
+        {
+          "id": "review-telos",
+          "mode": "review",
+          "description": "Decide whether to declare specs/telos.md. A repository without one validates exactly as before; a declared telos needs a purpose, and non_goals are optional."
+        },
+        {
+          "id": "record-consumer-contract",
+          "mode": "transform",
+          "transformation": "record-consumer-contract",
+          "description": "Update the accepted toolkit/schema pins in specs/skills/repo-overlay.md; no artifact is rewritten."
+        },
+        {
+          "id": "validate-telos",
+          "mode": "validate",
+          "description": "Run the deterministic validator suite. A telos missing its purpose fails front-matter validation; its absence is never a finding."
+        }
+      ],
+      "continuity": {
+        "identity": "preserved",
+        "intent": "preserved",
+        "semantics": "preserved",
+        "data": "unchanged",
+        "operations": "unchanged"
+      }
+    },
+    {
+      "id": "schema-1-17-0-to-1-18-0",
+      "from": {
+        "schema": "1.17.0"
+      },
+      "to": {
+        "schema": "1.18.0"
+      },
+      "kind": "schema",
+      "summary": "Rules gain an optional kind and may declare that tests citing them are evidence. Both are additive; existing maps validate unchanged.",
+      "steps": [
+        {
+          "id": "review-rule-kind-and-citations",
+          "mode": "review",
+          "description": "Decide which rules carry kind: domain, validation or boundary, and which accept cited_tests. A rule that declares cited_tests counts every test naming its id or family-and-number prefix, scoped to the listed files when given."
+        },
+        {
+          "id": "record-consumer-contract",
+          "mode": "transform",
+          "transformation": "record-consumer-contract",
+          "description": "Update the accepted toolkit/schema pins in specs/skills/repo-overlay.md; no rule is rewritten."
+        },
+        {
+          "id": "validate-rule-citations",
+          "mode": "validate",
+          "description": "Run the validators and the evidence roll-up. A test citing a rule no map declares is reported as unowned-citation, an advisory."
+        }
+      ],
+      "continuity": {
+        "identity": "preserved",
+        "intent": "preserved",
+        "semantics": "preserved",
+        "data": "unchanged",
+        "operations": "unchanged"
+      }
+    }
+  ]
+}

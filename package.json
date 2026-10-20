@@ -1,0 +1,61 @@
+{
+  "name": "idd-toolkit",
+  "version": "0.1.0-uat.9",
+  "description": "Intention-Driven Design toolkit: skills, validators, and evidence generators for traceable software development.",
+  "author": {
+    "name": "Ted Slusser",
+    "url": "https://github.com/slusset"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/slusset/intention-driven-design.git"
+  },
+  "license": "MIT",
+  "keywords": [
+    "idd",
+    "intention-driven-design",
+    "narrative-driven",
+    "bdd",
+    "domain-modeling",
+    "traceability",
+    "specification"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "bin": {
+    "idd": "./bin/idd.js"
+  },
+  "scripts": {
+    "build": "node tools/build-dist.js",
+    "test": "node --test"
+  },
+  "files": [
+    ".claude-plugin/",
+    ".codex-plugin/",
+    ".agents/plugins/marketplace.json",
+    ".github/actions/idd-check/",
+    "install/",
+    "bin/",
+    "dist/",
+    "tools/lib/",
+    "tools/validate-*.js",
+    "tools/generate-evidence.js",
+    "tools/graph-generation/",
+    "migrations/",
+    "schemas/",
+    "skills/",
+    "docs/",
+    "SCHEMA.md"
+  ],
+  "dependencies": {
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@stoplight/spectral-cli": "^6.15.0",
+    "esbuild": "0.28.2",
+    "gherkin-lint": "^4.2.4"
+  }
+}

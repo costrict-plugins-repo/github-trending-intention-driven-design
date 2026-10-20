@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/slusset/intention-driven-design/schemas/v1/index.json",
+  "title": "IDD Schema Registry (v1)",
+  "description": "Registry of IDD artifact schemas and reusable definitions at v1. Each entry maps a kind to its canonical $id and local path under schemas/v1/. Consumers should prefer the $id URL; local validators resolve via the path.",
+  "version": "1.18.0",
+  "dialect": "https://json-schema.org/draft/2020-12/schema",
+  "artifacts": {
+    "telos": {
+      "kind": "front-matter",
+      "applies_to": "specs/telos.md",
+      "$id": "https://github.com/slusset/intention-driven-design/schemas/v1/telos.schema.json",
+      "path": "telos.schema.json"
+    },
+    "persona": {
+      "kind": "front-matter",
+      "applies_to": "specs/personas/**/*.md",
+      "$id": "https://github.com/slusset/intention-driven-design/schemas/v1/persona.schema.json",
+      "path": "persona.schema.json"
+    },
+    "journey": {
+      "kind": "front-matter",
+      "applies_to": "specs/journeys/**/*.md",
+      "$id": "https://github.com/slusset/intention-driven-design/schemas/v1/journey.schema.json",
+      "path": "journey.schema.json"
+    },
+    "story": {
+      "kind": "front-matter",
+      "applies_to": "specs/stories/**/*.md",
+      "$id": "https://github.com/slusset/intention-driven-design/schemas/v1/story.schema.json",
+      "path": "story.schema.json"
+    },
+    "feature": {
+      "kind": "front-matter",
+      "applies_to": "specs/features/**/*.feature",
+      "$id": "https://github.com/slusset/intention-driven-design/schemas/v1/feature.schema.json",
+      "path": "feature.schema.json"
+    },
+    "model": {
+      "kind": "document",
+      "applies_to": "specs/models/**/*.model.yaml",
+      "$id": "https://github.com/slusset/intention-driven-design/schemas/v1/model.schema.json",
+      "path": "model.schema.json"
+    },
+    "lifecycle": {
+      "kind": "document",
+      "applies_to": "specs/models/**/*.lifecycle.yaml",
+      "$id": "https://github.com/slusset/intention-driven-design/schemas/v1/lifecycle.schema.json",
+      "path": "lifecycle.schema.json"
+    },
+    "journey-map": {
+      "kind": "document",
+      "applies_to": "specs/journey-maps/**/*.{journey-map,map}.yaml",
+      "$id": "https://github.com/slusset/intention-driven-design/schemas/v1/journey-map.schema.json",
+      "path": "journey-map.schema.json"
+    },
+    "capability": {
+      "kind": "document",
+      "applies_to": "specs/capabilities/**/*.capability.yaml",
+      "$id": "https://github.com/slusset/intention-driven-design/schemas/v1/capability.schema.json",
+      "path": "capability.schema.json"
+    },
+    "fixture": {
+      "kind": "document",
+      "applies_to": "specs/fixtures/**/*.{fixture.yaml,json}",
+      "$id": "https://github.com/slusset/intention-driven-design/schemas/v1/fixture.schema.json",
+      "path": "fixture.schema.json"
+    },
+    "modules": {
+      "kind": "document",
+      "applies_to": "specs/modules.yaml",
+      "$id": "https://github.com/slusset/intention-driven-design/schemas/v1/modules.schema.json",
+      "path": "modules.schema.json"
+    },
+    "verification-map": {
+      "kind": "document",
+      "applies_to": "*/verification/*/verification.yaml",
+      "$id": "https://github.com/slusset/intention-driven-design/schemas/v1/verification-map.schema.json",
+      "path": "verification-map.schema.json"
+    },
+    "consumer-contract": {
+      "kind": "front-matter",
+      "applies_to": "specs/skills/repo-overlay.md",
+      "$id": "https://github.com/slusset/intention-driven-design/schemas/v1/consumer-contract.schema.json",
+      "path": "consumer-contract.schema.json"
+    }
+  },
+  "definitions": {
+    "evidence-binding": {
+      "$id": "https://github.com/slusset/intention-driven-design/schemas/v1/evidence-binding.schema.json",
+      "path": "evidence-binding.schema.json"
+    },
+    "contract-pin": {
+      "$id": "https://github.com/slusset/intention-driven-design/schemas/v1/contract-pin.schema.json",
+      "path": "contract-pin.schema.json"
+    },
+    "evidence-classification": {
+      "$id": "https://github.com/slusset/intention-driven-design/schemas/v1/evidence-classification.schema.json",
+      "path": "evidence-classification.schema.json"
+    }
+  },
+  "cross_document_constraints": {
+    "description": "Constraints that JSON Schema cannot express. Validated by imperative checkers, not by these schemas.",
+    "constraints": [
+      "traceability: every refs/sources/scope/journey/story/feature reference resolves to an existing file (tools/validate-traceability.js)",
+      "capability-scope: every artifact listed under a capability's scope exists (tools/validate-capability-scope.js)",
+      "capability-closure: every artifact reachable from a capability's scope is itself in scope, with explicit `excluded:` for cross-capability shares (tools/validate-capability-closure.js, #40)",
+      "enforcement-bindings: every model rule with `enforced:` bindings resolves to a real DB migration, OpenAPI schema fragment, named invariant, Gherkin scenario, or named test (tools/validate-enforcement-bindings.js, #41)",
+      "modules: every capability is assigned exactly once, roots are explicit, rule-family ownership is unique, and module dependencies form an acyclic graph (tools/validate-modules.js, #56)",
+      "verification: every module capability has one root-aware verification map; map dependencies and rule-family citations follow the module DAG; verification and certification classifications are monotone across declared map dependencies (tools/validate-verification.js, #56)",
+      "evidence-bindings: every current-evidence selector resolves literally inside its declared files; referenced contracts and root-level x-rules remain two-way consistent with verification-map rule IDs (tools/validate-verification.js, #56)",
+      "contract-pins: every declared cross-module contract pin uses jcs-sha256@1 and matches the recomputed digest of the exact upstream JSON Schema bytes (tools/validate-verification.js, #56)",
+      "consumer-contract: consumer overlay front matter records the accepted toolkit version, schema-registry version/digest, and distribution provenance for doctor drift detection (tools/lib/consumer-contract.js, #57)",
+      "fixture-contract: fixture payloads validate against their declared contract operation (tools/validate-fixtures.js)",
+      "evidence: certification manifests reference real test outputs (tools/validate-evidence.js)",
+      "lifecycle-subject: a model that names a `lifecycle:` document shares its subject kind and name with it (entity ↔ entity, value_object ↔ value_object) (tools/validate-models.js, #84)",
+      "formal-evidence: every Alloy assertion/predicate named by a rule is declared in the map's alloy sources or the rule's profiles; every TLA+ invariant/property is declared in the model or its configuration; every conformance vector names the rule in `_meta.rules`; a tooling lock pins the checker the map claims (tools/lib/formal-evidence.js, v1.13)",
+      "evidence-rollup: every formal-result record matches a verification-map claim by kind, name, and source; its verdict is recomputed against the map's pinned outcome; a capability's declared verification claim never exceeds the claim derived from this run's records; every UNSAT assertion has a SAT witness (tools/lib/evidence-rollup.js, v1.14)"
+    ],
+    "future": []
+  },
+  "evidence": {
+    "description": "Run-specific evidence records. Generated into the gitignored .idd/evidence/ workspace and published through CI; never committed.",
+    "formal-result": {
+      "applies_to": ".idd/evidence/results/*.{json,jsonl}",
+      "$id": "https://github.com/slusset/intention-driven-design/schemas/v1/formal-result.schema.json",
+      "path": "formal-result.schema.json"
+    },
+    "evidence-rollup": {
+      "applies_to": ".idd/evidence/rollup.json",
+      "$id": "https://github.com/slusset/intention-driven-design/schemas/v1/evidence-rollup.schema.json",
+      "path": "evidence-rollup.schema.json"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/slusset/intention-driven-design/schemas/v1/story.schema.json",
+  "title": "IDD Story front-matter",
+  "description": "Schema for the YAML front-matter of an IDD story artifact (Markdown body is freeform).",
+  "type": "object",
+  "required": ["id", "type"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "type": { "const": "story" },
+    "refs": {
+      "type": "object",
+      "description": "Open-ended map of reference kinds to values.",
+      "additionalProperties": true
+    },
+    "$conformance": { "$ref": "#/$defs/conformance" },
+    "$conformance-notes": { "$ref": "#/$defs/conformanceNotes" }
+  },
+  "$defs": {
+    "conformance": {
+      "description": "Conformance tier for the enclosing field. See SCHEMA.md.",
+      "enum": ["canonical", "legacy-compatible", "experimental"]
+    },
+    "conformanceNotes": { "type": "string" }
+  }
+}

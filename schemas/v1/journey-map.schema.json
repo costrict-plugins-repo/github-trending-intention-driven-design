@@ -1,0 +1,207 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/slusset/intention-driven-design/schemas/v1/journey-map.schema.json",
+  "title": "IDD Journey Map",
+  "description": "Schema for IDD journey map documents. Two step models are supported: the current array form (preferred) and the legacy keyed-object form. The 'non-sequential journey_step' rule and the assertion/action vocabularies are validator behaviors today; issues #38 and #39 replace them with kinded grammars and a declarative shape selector. Closed-world keys per #37.",
+  "type": "object",
+  "required": ["id", "type", "journey"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "type": { "const": "journey-map" },
+    "journey": { "type": "string", "minLength": 1 },
+    "description": { "description": "Narrative summary of the journey this map describes.", "type": "string" },
+    "preconditions": {
+      "description": "Narrative or structured preconditions that must hold for this journey-map to apply.",
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "array",
+          "items": { "type": ["string", "object"] }
+        },
+        { "type": "object" }
+      ]
+    },
+    "state_diagram": {
+      "description": "Optional embedded state diagram or reference to one. Free-form structure.",
+      "type": ["string", "object", "array"]
+    },
+    "landing_decision_table": {
+      "description": "Decision table describing landing-page behavior. Free-form structure.",
+      "type": ["object", "array"]
+    },
+    "shape": {
+      "description": "Declarative journey-map shape (#39). Selects which step-ordering rule applies. Default is `sequential` for back-compat.",
+      "enum": ["sequential", "branching", "hierarchical"],
+      "default": "sequential"
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "journey": { "type": "string" },
+        "stories": { "type": "array", "items": { "type": "string" } },
+        "features": { "type": "array", "items": { "type": "string" } },
+        "$conformance": { "$ref": "#/$defs/conformance" },
+        "$conformance-notes": { "$ref": "#/$defs/conformanceNotes" }
+      }
+    },
+    "fixtures": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "ref": { "type": "string" },
+          "$conformance": { "$ref": "#/$defs/conformance" },
+          "$conformance-notes": { "$ref": "#/$defs/conformanceNotes" }
+        }
+      }
+    },
+    "steps": {
+      "oneOf": [
+        { "$ref": "#/$defs/stepArray" },
+        { "$ref": "#/$defs/stepObject" }
+      ]
+    },
+    "$conformance": { "$ref": "#/$defs/conformance" },
+    "$conformance-notes": { "$ref": "#/$defs/conformanceNotes" }
+  },
+  "$defs": {
+    "conformance": {
+      "description": "Conformance tier for the enclosing field. See SCHEMA.md.",
+      "enum": ["canonical", "legacy-compatible", "experimental"]
+    },
+    "conformanceNotes": { "type": "string" },
+    "stepArray": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "additionalProperties": true,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "story": { "type": "string" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "journey_step": { "type": ["integer", "string"] },
+          "branch": {
+            "description": "Used with shape:branching. Distinguishes steps that share a journey_step number by naming the branch the step belongs to.",
+            "type": "string"
+          },
+          "actions": { "type": "array", "items": { "$ref": "#/$defs/action" } },
+          "assertions": { "type": "array", "items": { "$ref": "#/$defs/assertion" } },
+          "$conformance": { "$ref": "#/$defs/conformance" },
+          "$conformance-notes": { "$ref": "#/$defs/conformanceNotes" }
+        }
+      }
+    },
+    "stepObject": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["journey_step", "title"],
+        "additionalProperties": true,
+        "properties": {
+          "journey_step": { "type": ["integer", "string"], "minimum": 1 },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "story": { "type": "string" },
+          "branch": { "type": "string" },
+          "actions": { "type": "array", "items": { "$ref": "#/$defs/action" } },
+          "assertions": { "type": "array", "items": { "$ref": "#/$defs/assertion" } },
+          "$conformance": { "$ref": "#/$defs/conformance" },
+          "$conformance-notes": { "$ref": "#/$defs/conformanceNotes" }
+        }
+      }
+    },
+    "action": {
+      "type": "object",
+      "description": "A user or system action performed during a journey step. Either a legacy `type` (back-compat with the Playwright-vocab enum) or a kinded form (`kind` + attributes) must be present. The per-kind property vocabulary is author-extensible (target, url, value, timeout, until, variant, capture, …), so this object is intentionally open — typos won't be caught here.",
+      "anyOf": [
+        { "required": ["type"] },
+        { "required": ["kind"] }
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "type": {
+          "description": "Legacy action verb. Recognized values are navigate, click, fill, select, check, uncheck, wait, hover, scroll, press, type, upload. New documents are encouraged to use the expanded form.",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Broad category of action. ui-interaction covers DOM-level verbs; navigation covers route changes; wait covers delays or polling; network covers requests issued directly by the test; cli runs an installed command; install manages a package or executable; mcp calls a Model Context Protocol server; harness drives an agent-harness integration.",
+          "enum": ["ui-interaction", "navigation", "wait", "network", "cli", "install", "mcp", "harness"]
+        },
+        "verb": {
+          "description": "Optional fine-grained verb when `kind` alone is too coarse (e.g., kind:ui-interaction, verb:double-click).",
+          "type": "string"
+        },
+        "target": { "type": ["string", "object"] },
+        "url": { "type": "string", "description": "Target URL for navigation actions." },
+        "value": {},
+        "description": { "type": "string" },
+        "$conformance": { "$ref": "#/$defs/conformance" },
+        "$conformance-notes": { "$ref": "#/$defs/conformanceNotes" }
+      }
+    },
+    "assertion": {
+      "type": "object",
+      "description": "An expectation checked during a journey step. Either a legacy `type` (back-compat with the Playwright-vocab enum) or a kinded form (`kind` + property + target) must be present. The per-kind property vocabulary is author-extensible (selector, endpoint, expected, expected_status, contains, pattern, equals, fields, tag, min_seconds, …), so this object is intentionally open — typos won't be caught here.",
+      "anyOf": [
+        { "required": ["type"] },
+        { "required": ["kind"] }
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "type": {
+          "description": "Legacy assertion name. Recognized values are visible, hidden, text, url, api, count, polling, attribute, value, enabled, disabled. New documents are encouraged to use the expanded form.",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Broad category of assertion. dom / url / api / cookie are browser-shaped; classification / tag / context are domain-level; lifecycle asserts a modeled state; authority asserts a grant, scope, or principal continuity; content asserts required or forbidden content; package asserts installed-artifact state.",
+          "enum": [
+            "dom",
+            "url",
+            "api",
+            "cookie",
+            "classification",
+            "tag",
+            "context",
+            "lifecycle",
+            "authority",
+            "content",
+            "package"
+          ]
+        },
+        "property": {
+          "description": "What about the kind is being asserted. For dom: visibility | text | value | attribute | enabled | count. For url: matches | contains | query. For cookie: set | present | max-age. Open string because each kind has its own property vocabulary.",
+          "type": "string"
+        },
+        "target": {
+          "description": "What the assertion is about: a DOM selector, URL pattern, API endpoint, cookie name, classification name, tag name, or context key.",
+          "type": ["string", "object"]
+        },
+        "selector": { "type": ["string", "object"] },
+        "endpoint": { "type": "string", "description": "API endpoint the assertion checks." },
+        "expected": {},
+        "expected_status": {
+          "description": "Expected HTTP status code for kind:api assertions.",
+          "type": ["integer", "string"]
+        },
+        "contains": { "description": "Substring or fragment the assertion expects to find." },
+        "pattern": {
+          "description": "Regex or shape pattern the assertion expects to match.",
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "description": "Optional name for the assertion (useful when grouping)."
+        },
+        "description": { "type": "string" },
+        "$conformance": { "$ref": "#/$defs/conformance" },
+        "$conformance-notes": { "$ref": "#/$defs/conformanceNotes" }
+      }
+    }
+  }
+}

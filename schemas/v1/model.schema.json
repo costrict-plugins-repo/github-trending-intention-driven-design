@@ -1,0 +1,472 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/slusset/intention-driven-design/schemas/v1/model.schema.json",
+  "title": "IDD Domain Model",
+  "description": "Schema for IDD domain model documents (.model.yaml). A model is one of: entity, value-object (complex or primitive), aggregate, catalog, or a shared value-objects bundle. The discriminating top-level key (entity / value_object / aggregate / catalog / value_objects) selects the variant. Closed-world key validation per #37; unknown keys may be demoted via $conformance.",
+  "type": "object",
+  "required": ["id", "type"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "type": { "const": "model" },
+    "description": { "type": "string" },
+    "sources": { "$ref": "#/$defs/sources" },
+    "lifecycle": { "description": "Path to the lifecycle document for this model.", "type": "string" },
+    "contract": {
+      "description": "Path to the contract (JSON Schema / OpenAPI / AsyncAPI) this model is realized by.",
+      "type": "string"
+    },
+    "contracts": {
+      "description": "Contract paths this model is realized by, as a list or a name → path map.",
+      "oneOf": [
+        { "type": "array", "items": { "type": "string" } },
+        { "type": "object", "additionalProperties": { "type": "string" } }
+      ]
+    },
+    "rules": {
+      "description": "Business rules. Object form carries an id (the join key cited by lifecycles, features, fixtures, and evidence); a bare string is accepted as narrative and reported as advisory.",
+      "type": "array",
+      "items": {
+        "anyOf": [
+          { "type": "string", "minLength": 1 },
+          { "$ref": "#/$defs/rule" }
+        ]
+      }
+    },
+    "invariants": {
+      "description": "Document-level invariants narrative — promotes to canonical from edyoucate-ai usage.",
+      "type": "array",
+      "items": { "type": ["string", "object"] }
+    },
+    "versioning": {
+      "description": "Declares the versioning policy for this model (e.g., immutable, append-only revisions, snapshot-per-event).",
+      "type": ["string", "object"]
+    },
+    "entity": { "type": "string", "minLength": 1 },
+    "aggregate": { "type": "string", "minLength": 1 },
+    "catalog": { "type": "string", "minLength": 1 },
+    "value_object": { "type": "string", "minLength": 1 },
+    "value_objects": { "type": "object", "additionalProperties": { "$ref": "#/$defs/nestedValueObject" } },
+    "entities": { "type": "object", "additionalProperties": { "$ref": "#/$defs/nestedEntity" } },
+    "identity": { "$ref": "#/$defs/identity" },
+    "attributes": { "$ref": "#/$defs/attributeBlock" },
+    "properties": { "$ref": "#/$defs/attributeBlock" },
+    "relationships": { "type": "object", "additionalProperties": { "$ref": "#/$defs/relationship" } },
+    "entries": { "type": "object" },
+    "items": { "type": "object" },
+    "value_type": {
+      "description": "Used on value-object documents to declare the underlying shape: a primitive type (string, number, integer, boolean) or `object`. Promotes the primitive-value-object pattern (e.g., email-address as string + format + constraints).",
+      "type": "string"
+    },
+    "format": {
+      "description": "For primitive value-objects: format hint (e.g., `email`, `iso-4217`). Mirrors JSON Schema's `format` keyword.",
+      "type": "string"
+    },
+    "constraints": { "$ref": "#/$defs/constraints" },
+    "required": {
+      "description": "For value-object documents with `value_type: object`, a list of required property names — mirrors JSON Schema's `required`.",
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "validation": {
+      "description": "Value-object validation rules in narrative form.",
+      "type": "array",
+      "items": { "type": ["string", "object"] }
+    },
+    "equality": {
+      "description": "Value-object equality semantics in narrative form.",
+      "type": ["string", "object"]
+    },
+    "example": {
+      "description": "For primitive value-objects: an example value.",
+      "type": ["string", "number", "boolean"]
+    },
+    "retires": {
+      "description": "Declares artifacts retired by this model (typically referenced from `specs/archive/`). The closure validator ignores entries listed here.",
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "$conformance": { "$ref": "#/$defs/conformance" },
+    "$conformance-notes": { "$ref": "#/$defs/conformanceNotes" }
+  },
+  "anyOf": [
+    { "required": ["entity"] },
+    { "required": ["value_object"] },
+    { "required": ["aggregate"] },
+    { "required": ["catalog"] },
+    {
+      "required": ["value_objects"],
+      "not": {
+        "anyOf": [
+          { "required": ["entity"] },
+          { "required": ["aggregate"] },
+          { "required": ["catalog"] },
+          { "required": ["value_object"] }
+        ]
+      }
+    }
+  ],
+  "$defs": {
+    "conformance": {
+      "description": "Conformance tier for the enclosing field. See SCHEMA.md.",
+      "enum": ["canonical", "legacy-compatible", "experimental"]
+    },
+    "conformanceNotes": { "type": "string" },
+    "constraints": {
+      "description": "Constraint declarations. Two accepted forms: an array of narrative tags (e.g., [non-empty, immutable]) or an object whose keys are constraint names with values (e.g., { minLength: 2, maxLength: 200, pattern: ... }). Both are canonical.",
+      "oneOf": [
+        {
+          "type": "array",
+          "items": { "type": ["string", "object"] }
+        },
+        { "type": "object" }
+      ]
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "stories": { "type": "array", "items": { "type": "string" } },
+        "journeys": { "type": "array", "items": { "type": "string" } },
+        "features": { "type": "array", "items": { "type": "string" } },
+        "reference": {
+          "description": "Additional reference document(s) for this model.",
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string" } }
+          ]
+        },
+        "issues": {
+          "description": "Associated issue tracker references.",
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string" } }
+          ]
+        },
+        "$conformance": { "$ref": "#/$defs/conformance" },
+        "$conformance-notes": { "$ref": "#/$defs/conformanceNotes" }
+      }
+    },
+    "identity": {
+      "description": "How instances of this model are identified (#83). kind:field names one attribute; kind:composite names several attributes that identify together; kind:content has no field — identity is the canonical bytes, defined by equality. kind may be omitted and is then inferred from which of field / fields / equality is present.",
+      "type": "object",
+      "additionalProperties": false,
+      "anyOf": [
+        { "required": ["field"] },
+        { "required": ["fields"] },
+        { "required": ["equality"] }
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": { "kind": { "const": "field" } },
+            "required": ["kind"]
+          },
+          "then": { "required": ["field"] }
+        },
+        {
+          "if": {
+            "properties": { "kind": { "const": "composite" } },
+            "required": ["kind"]
+          },
+          "then": { "required": ["fields"] }
+        },
+        {
+          "if": {
+            "properties": { "kind": { "const": "content" } },
+            "required": ["kind"]
+          },
+          "then": { "required": ["equality"] }
+        }
+      ],
+      "properties": {
+        "kind": { "enum": ["field", "composite", "content"] },
+        "field": { "type": "string", "minLength": 1 },
+        "fields": {
+          "description": "Attributes that identify the instance together (composite key).",
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "equality": {
+          "description": "What makes two instances the same. Required for content identity, where there is no field to name (e.g. `canonical-bytes`, `digest`, or a short statement of the comparison).",
+          "type": "string",
+          "minLength": 1
+        },
+        "immutable": {
+          "description": "The identity never changes for the lifetime of the instance. Implied for value objects.",
+          "type": "boolean"
+        },
+        "type": { "type": "string" },
+        "format": {
+          "description": "ID format declaration (e.g., `prefixed-ulid`, `uuid-v4`). Drives ID generation and validation downstream.",
+          "type": "string"
+        },
+        "prefix": {
+          "description": "Prefix string applied to generated IDs (e.g., `cust_` produces `cust_01HZZ...`).",
+          "type": "string"
+        },
+        "example": { "description": "Concrete example of a valid identifier.", "type": ["string", "number"] },
+        "description": { "type": "string" },
+        "notes": { "type": "string" },
+        "$conformance": { "$ref": "#/$defs/conformance" },
+        "$conformance-notes": { "$ref": "#/$defs/conformanceNotes" }
+      }
+    },
+    "attribute": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": { "type": "string" },
+        "required": {
+          "description": "Whether the attribute must be present (#82). boolean for an unconditional obligation; `{ when: <condition> }` for an obligation under a named condition; a bare string is the legacy spelling of the conditional form and is reported as legacy-compatible.",
+          "anyOf": [
+            { "type": "boolean" },
+            { "type": "string", "minLength": 1 },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["when"],
+              "properties": {
+                "when": { "$ref": "#/$defs/condition" },
+                "$conformance": { "$ref": "#/$defs/conformance" },
+                "$conformance-notes": { "$ref": "#/$defs/conformanceNotes" }
+              }
+            }
+          ]
+        },
+        "required_when": {
+          "description": "Condition under which the attribute must be present: lifecycle states (shorthand for `required: { when: { state: [...] } }`) or a named condition / expression.",
+          "anyOf": [
+            {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 },
+              "minItems": 1
+            },
+            { "$ref": "#/$defs/condition" }
+          ]
+        },
+        "forbidden_when": {
+          "description": "Condition under which the attribute must be absent. Same forms as required_when.",
+          "anyOf": [
+            {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 },
+              "minItems": 1
+            },
+            { "$ref": "#/$defs/condition" }
+          ]
+        },
+        "constraints": { "$ref": "#/$defs/constraints" },
+        "values": { "type": "array" },
+        "const": { "description": "The attribute always carries this literal value." },
+        "source": {
+          "description": "Where the value is derived from when it is not authored directly (e.g. `digest of payload`, `journal sequence`).",
+          "type": "string"
+        },
+        "description": { "type": "string" },
+        "default": { "description": "Default value when the attribute is not explicitly set." },
+        "immutable": {
+          "description": "Once set, the value cannot change for the lifetime of the entity (e.g., createdAt).",
+          "type": "boolean"
+        },
+        "ref": {
+          "description": "Reference to a shared model/type artifact that defines the attribute's shape (e.g., specs/models/shared/email-address.model.yaml).",
+          "type": "string"
+        },
+        "format": {
+          "description": "Format hint mirroring JSON Schema's `format` keyword (e.g., email, uri, date-time).",
+          "type": "string"
+        },
+        "prefix": {
+          "description": "For ID-like attributes carrying a prefixed identifier (e.g., `trev_`).",
+          "type": "string"
+        },
+        "example": { "description": "Example value for documentation and seed-data purposes." },
+        "itemType": {
+          "description": "For array-typed attributes, the type of each element.",
+          "type": ["string", "object"]
+        },
+        "properties": {
+          "description": "For object-typed attributes, the nested property schema.",
+          "type": "object"
+        },
+        "sensitive": {
+          "description": "Marks the attribute as carrying sensitive data (e.g., tokens, secrets). Drives logging redaction policy downstream.",
+          "type": "boolean"
+        },
+        "minimum": { "type": "number" },
+        "maximum": { "type": "number" },
+        "see": {
+          "description": "Cross-reference to related artifacts.",
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string" } }
+          ]
+        },
+        "$conformance": { "$ref": "#/$defs/conformance" },
+        "$conformance-notes": { "$ref": "#/$defs/conformanceNotes" }
+      },
+      "description": "An attribute definition. `type` may be omitted when `values` (implies enum), `const`, `source`, or `ref` determines the shape.",
+      "anyOf": [
+        { "required": ["type"] },
+        { "required": ["values"] },
+        { "required": ["const"] },
+        { "required": ["source"] },
+        { "required": ["ref"] }
+      ]
+    },
+    "attributeBlock": {
+      "type": "object",
+      "description": "Map of attribute names to attribute definitions. Attribute names are author-defined; values must conform to #/$defs/attribute.",
+      "additionalProperties": { "$ref": "#/$defs/attribute" }
+    },
+    "relationship": {
+      "type": "object",
+      "description": "A relationship between this model and another entity. Either a legacy `type` (back-compat) or an expanded kinded form (`kind` + attributes) — or both — must be present. The expanded form replaces the closed enum from v1.0 (see #38).",
+      "required": ["entity"],
+      "anyOf": [
+        { "required": ["type"] },
+        { "required": ["kind"] }
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "description": "Legacy relationship name. Recognized values are belongs-to, has-one, has-many, many-to-many. The validator expands each to its named combination of (kind, cardinality, ownership). New documents are encouraged to use the expanded form.",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Structural nature of the relationship. composition (lifecycle-bound), association (independent), aggregation (whole/part without lifecycle ownership), pointer (read-only reference, often to a specific revision).",
+          "enum": ["composition", "association", "aggregation", "pointer"]
+        },
+        "cardinality": { "enum": ["one-to-one", "one-to-many", "many-to-one", "many-to-many"] },
+        "temporality": {
+          "description": "How time enters the reference. `live` follows the target; `pinned` references a specific revision; `snapshotted` carries an embedded copy; `versioned` tracks a specific version identifier.",
+          "enum": ["live", "pinned", "snapshotted", "versioned"]
+        },
+        "ownership": { "enum": ["owned", "not-owned"] },
+        "required": { "type": "boolean" },
+        "entity": { "type": "string" },
+        "description": { "type": "string" },
+        "$conformance": { "$ref": "#/$defs/conformance" },
+        "$conformance-notes": { "$ref": "#/$defs/conformanceNotes" }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "description": { "type": "string" },
+        "statement": {
+          "description": "Long-form statement of the rule; the normative text a checker or reviewer holds the implementation to.",
+          "type": "string"
+        },
+        "when": { "type": "string" },
+        "then": { "type": "string" },
+        "enforced": { "$ref": "#/$defs/enforced" },
+        "$conformance": { "$ref": "#/$defs/conformance" },
+        "$conformance-notes": { "$ref": "#/$defs/conformanceNotes" }
+      }
+    },
+    "enforced": {
+      "description": "How this rule is enforced (#41). Three accepted forms: (1) a legacy narrative string (e.g., 'persistence'), retained for back-compat; (2) a `pending:` marker referencing a tracking issue, allowed during implementation; (3) an array of concrete bindings that the validator resolves against real artifacts.",
+      "oneOf": [
+        { "type": "string" },
+        { "$ref": "#/$defs/pendingEnforcement" },
+        { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/enforcementBinding" } }
+      ]
+    },
+    "pendingEnforcement": {
+      "type": "object",
+      "required": ["pending"],
+      "additionalProperties": false,
+      "properties": {
+        "pending": {
+          "description": "Tracking reference (issue URL or identifier) for the in-flight binding.",
+          "type": "string",
+          "minLength": 1
+        },
+        "$conformance": { "$ref": "#/$defs/conformance" },
+        "$conformance-notes": { "$ref": "#/$defs/conformanceNotes" }
+      }
+    },
+    "enforcementBinding": {
+      "type": "object",
+      "required": ["kind", "binding"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "description": "Where the rule is enforced. validation → OpenAPI schema constraint, Gherkin scenario, or typed DTO. persistence → DB migration file with a named constraint, or repository typed DTO. invariant → entry in docs/invariants-in-production.md with an emission point in the implementation. domain → unit test or BDD scenario referenced by name.",
+          "enum": ["validation", "persistence", "invariant", "domain"]
+        },
+        "binding": {
+          "description": "Locator the validator resolves. Examples: `migrations/0042_truth_files.sql#unique-customer-id`, `openapi:#/components/schemas/TruthFile/required`, `docs/invariants-in-production.md#truth-file-revision-pin-roundtrip`, `tests/unit/scan.test.js:scan pinned to revision`. See SCHEMA.md for the format per kind.",
+          "type": "string",
+          "minLength": 1
+        },
+        "description": { "type": "string" },
+        "$conformance": { "$ref": "#/$defs/conformance" },
+        "$conformance-notes": { "$ref": "#/$defs/conformanceNotes" }
+      }
+    },
+    "nestedEntity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "entity": { "type": "string" },
+        "ref": { "type": "string" },
+        "description": { "type": "string" },
+        "$conformance": { "$ref": "#/$defs/conformance" },
+        "$conformance-notes": { "$ref": "#/$defs/conformanceNotes" }
+      }
+    },
+    "nestedValueObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "value_object": { "type": "string" },
+        "ref": { "type": "string" },
+        "description": { "type": "string" },
+        "attributes": { "$ref": "#/$defs/attributeBlock" },
+        "properties": { "$ref": "#/$defs/attributeBlock" },
+        "$conformance": { "$ref": "#/$defs/conformance" },
+        "$conformance-notes": { "$ref": "#/$defs/conformanceNotes" }
+      }
+    },
+    "condition": {
+      "description": "A named condition under which an obligation holds. A string names the condition (an event variant, a rule id, or a project vocabulary term). The object forms reference a lifecycle state set, an event variant, or a rule id explicitly.",
+      "anyOf": [
+        { "type": "string", "minLength": 1 },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["state"],
+          "properties": {
+            "state": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 },
+              "minItems": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["variant"],
+          "properties": {
+            "variant": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["rule"],
+          "properties": {
+            "rule": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    }
+  }
+}

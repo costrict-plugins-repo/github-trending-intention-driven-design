@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/slusset/intention-driven-design/schemas/v1/fixture.schema.json",
+  "title": "IDD Fixture",
+  "description": "Schema for IDD fixture documents. YAML fixtures carry id/type at the top level; JSON fixtures carry the same metadata under a `_meta` block. The body shape beyond the metadata is intentionally open in v1 — payload schemas come from the contract layer (OpenAPI / AsyncAPI / JSON-RPC) via fixture validation. Closed-world keys per #37 at the metadata level; payload bodies (request/response/event/rpc) remain open because their shape is contract-driven.",
+  "type": "object",
+  "anyOf": [
+    { "$ref": "#/$defs/topLevelMetadata" },
+    { "$ref": "#/$defs/nestedMetadata" }
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "type": { "const": "fixture" },
+    "kind": {
+      "description": "Author taxonomy for the fixture (#81), e.g. `conformance-vector`, `application-contract-fixture`. `type` stays the constant `fixture` so the artifact kind is stable; `kind` says what sort of fixture it is.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "story": { "type": "string" },
+    "stories": { "type": "array", "items": { "type": "string" } },
+    "feature": { "type": "string" },
+    "journey": { "type": "string" },
+    "scenario": { "type": "string" },
+    "scenarios": { "type": "array", "items": { "type": "string" } },
+    "contract": { "$ref": "#/$defs/contractRef" },
+    "contracts": { "type": "array", "items": { "$ref": "#/$defs/contractRef" } },
+    "rules": {
+      "description": "Rule ids the fixture exercises.",
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "sentinels": {
+      "description": "Tokens that must not appear where the fixture says they are discarded; a leak is detectable by substring. A list of tokens, or a field-name → token map.",
+      "oneOf": [
+        {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        { "type": "object", "additionalProperties": { "type": "string" } }
+      ]
+    },
+    "description": { "type": "string" },
+    "statement": { "description": "Per-fixture statement of intent.", "type": "string" },
+    "harness": { "description": "Provenance of captured payloads (tool and version).", "type": "string" },
+    "request": { "type": ["object", "array"] },
+    "response": { "type": ["object", "array"] },
+    "event": { "type": ["object", "array"] },
+    "rpc": { "type": ["object", "array"] },
+    "_meta": { "$ref": "#/$defs/metaBlock" },
+    "$conformance": { "$ref": "#/$defs/conformance" },
+    "$conformance-notes": { "$ref": "#/$defs/conformanceNotes" }
+  },
+  "$defs": {
+    "conformance": {
+      "description": "Conformance tier for the enclosing field. See SCHEMA.md.",
+      "enum": ["canonical", "legacy-compatible", "experimental"]
+    },
+    "conformanceNotes": { "type": "string" },
+    "topLevelMetadata": { "type": "object", "required": ["id", "type"] },
+    "nestedMetadata": { "type": "object", "required": ["_meta"] },
+    "metaBlock": {
+      "type": "object",
+      "required": ["id", "type"],
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "const": "fixture" },
+        "kind": {
+          "description": "Author taxonomy for the fixture (#81), e.g. `conformance-vector`, `application-contract-fixture`. `type` stays the constant `fixture` so the artifact kind is stable; `kind` says what sort of fixture it is.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "story": { "type": "string" },
+        "stories": { "type": "array", "items": { "type": "string" } },
+        "feature": { "type": "string" },
+        "journey": { "type": "string" },
+        "scenario": { "type": "string" },
+        "scenarios": { "type": "array", "items": { "type": "string" } },
+        "contract": { "$ref": "#/$defs/contractRef" },
+        "contracts": { "type": "array", "items": { "$ref": "#/$defs/contractRef" } },
+        "schema": { "type": "string" },
+        "rules": {
+          "description": "Rule ids the fixture exercises.",
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "sentinels": {
+          "description": "Tokens that must not appear where the fixture says they are discarded; a leak is detectable by substring. A list of tokens, or a field-name → token map.",
+          "oneOf": [
+            {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            },
+            { "type": "object", "additionalProperties": { "type": "string" } }
+          ]
+        },
+        "description": { "type": "string" },
+        "statement": { "description": "Per-fixture statement of intent.", "type": "string" },
+        "harness": { "description": "Provenance of captured payloads (tool and version).", "type": "string" },
+        "$conformance": { "$ref": "#/$defs/conformance" },
+        "$conformance-notes": { "$ref": "#/$defs/conformanceNotes" }
+      },
+      "description": "JSON fixture metadata. Enumerated keys are canonical; further keys are author-extensible because per-project fixture vocabulary cannot be enumerated ahead of time (#81)."
+    },
+    "contractRef": {
+      "description": "Either a path to the contract file (string) or a structured contract reference.",
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "protocol": { "type": "string" },
+            "ref": { "type": "string" },
+            "operation": { "type": "string" },
+            "channel": { "type": "string" },
+            "action": { "type": "string" },
+            "method": { "type": "string" },
+            "$conformance": { "$ref": "#/$defs/conformance" },
+            "$conformance-notes": { "$ref": "#/$defs/conformanceNotes" }
+          }
+        }
+      ]
+    }
+  }
+}
